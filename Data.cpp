@@ -19,7 +19,12 @@ void Data::PrintAll() {
 Item* Data::InsertItem(char c, int i, string s, Date d) {
 	Item* it = new Item(c, i, s, d);
 
-	if (DataStructure.find(it->GetSubgroup) == DataStructure.end()) {
+	if (DataStructure.find(c) == DataStructure.end()) {
+
+	}
+	else {
+		
+		(*(DataStructure[c]))[i]->push_back(it);
 	}
 }
 

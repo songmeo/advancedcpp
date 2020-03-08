@@ -13,7 +13,5 @@ public:
 	Item();
 	Item(char, int, string, Date);
 	Item(const Item&);
-	char GetGroup();
-	int GetSubgroup();
 	~Item();
 };
