@@ -41,4 +41,12 @@ Item::Item(char c, int i, string s, Date d) {
 
 Item::Item(const Item&) {}
 
+char Item::GetGroup() {
+	return Group;
+}
+
+int Item::GetSubgroup() {
+	return Subgroup;
+}
+
 Item::~Item(){}
