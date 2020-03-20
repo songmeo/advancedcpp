@@ -1,8 +1,8 @@
-#include "Item.h"
-#include "Date.h"
 #include <random>
 #include <iostream>
 #include <fstream>
+#include "Item.h"
+#include "Date.h"
 using namespace std;
 
 Item::Item() {
@@ -39,6 +39,16 @@ Item::Item(char c, int i, string s, Date d) {
 	timestamp = d;
 }
 
-Item::Item(const Item&) {}
+Item::Item(const Item& itm) {
+	Group = itm.Group;
+	Subgroup = itm.Subgroup;
+	Name = itm.Name;
+	timestamp = itm.timestamp;
+}
 
-Item::~Item(){}
+Item::~Item(){
+	delete &Group;
+	delete& Subgroup;
+	delete& Name;
+	delete& timestamp;
+}
