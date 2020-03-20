@@ -24,6 +24,19 @@ Data::Data(int n) {
 //2
 Data::Data() {}
 
+//3
+Data::~Data() {
+	for (auto it1 = DataStructure.begin(); it1 != DataStructure.end(); it1++) {
+		for (auto it2 = it1->second->begin(); it2 != it1->second->end(); it2++) {
+			for (auto it3 = it2->second->begin(); it3 != it2->second->end(); it3++) {
+				delete[] *it3;
+			}
+			delete[] it2->second;
+		}
+		delete[] it1->second;
+	}
+	delete[] &DataStructure;
+}
 
 //4
 void Data::PrintAll() {
@@ -31,7 +44,7 @@ void Data::PrintAll() {
 		std::cout << bird.first << std::endl;
 }
 
-Data::~Data() {}
+
 
 //15
 Item* Data::InsertItem(char c, int i, string s, Date d) {
