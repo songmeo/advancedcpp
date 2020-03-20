@@ -6,7 +6,7 @@ using namespace std;
 
 class Data {
 private:
-	map<char, map<int, list<Item*>*>*> DataStructure;
+	map<char, map<int, list<Item*>*>*> DataStructure{};
 public:
 	Data(int n);
 	Data();

@@ -12,9 +12,16 @@ private:
 	Date timestamp;
 public:
 	Item();
+	~Item();
 	Item(char c, int i, string s, Date d);
 	Item(const Item& itm);
-	char getGroup();
-	int getSubgroup();
-	~Item();
+	char getGroup() {
+		return Group;
+	};
+	int getSubgroup() {
+		return Subgroup;
+	};
+	void toStr() {
+		cout << Group << " " << Subgroup << " " << Name << endl;
+	}
 };

@@ -7,15 +7,15 @@
 using namespace std;
 
 Item::Item() {
-	default_random_engine generator;
-
+	random_device rd; // obtain a random number from hardware
+	mt19937 eng(rd()); // seed the generator
 	//subgroup
 	uniform_int_distribution<int> subgroup(0, 99);
-	Subgroup = subgroup(generator);
+	Subgroup = subgroup(eng);
 
 	//group
 	uniform_int_distribution<int> group(65, 90);
-	Group = static_cast<char>(group(generator));
+	Group = static_cast<char>(group(eng));
 
 	//name
 	ifstream infile("Birds.txt");
@@ -25,8 +25,9 @@ Item::Item() {
 		getline(infile, tmp);
 		birds.push_back(tmp);
 	}
+
 	uniform_int_distribution<int> name(0, (int)birds.size() - 1);
-	Name = birds[name(generator)];
+	Name = birds[name(eng)];
 	infile.close();
 
 	//timestamp
@@ -52,12 +53,4 @@ Item::~Item(){
 	delete& Subgroup;
 	delete& Name;
 	delete& timestamp;
-}
-
-char Item::getGroup() {
-	return Group;
-}
-
-int Item::getSubgroup() {
-	return Subgroup;
 }
