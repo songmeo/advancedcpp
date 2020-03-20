@@ -1,31 +1,47 @@
 #include "Data.h"
 #include <algorithm>
 
+//1
+Data::Data(int n) {
+	while(n--) {
+		Item* itm = new Item(); //create random item
+		char c = itm->getGroup();
+		if (DataStructure.find(c) != DataStructure.end()) { //check if itm group exists
+			int i = itm->getSubgroup();
+			if (DataStructure[c]->find(i) != DataStructure[c]->end()) {  //check if itm subgroup exists
+				(*(DataStructure[c]))[i]->push_back(itm); //if yes, add itm to list
+			}
+			else { //if no, create list
+				list<Item*> l = { itm };
+				map<int, list<Item*>*> m{};
+				m[i] = &l;
+				DataStructure[c] = &m;
+			}
+		}
+	}
+}
+
 //2
 Data::Data() {}
 
-Data::Data(int n) {
-	
-}
 
 //4
 void Data::PrintAll() {
-	for (auto bird : DataStructure) {
+	for (auto bird : DataStructure)
 		std::cout << bird.first << std::endl;
-	}
 }
+
+Data::~Data() {}
 
 //15
 Item* Data::InsertItem(char c, int i, string s, Date d) {
 	Item* it = new Item(c, i, s, d);
 
 	if (DataStructure.find(c) == DataStructure.end()) {
-
-	}
-	else {
 		
-		(*(DataStructure[c]))[i]->push_back(it);
 	}
+	else
+		(*(DataStructure[c]))[i]->push_back(it);
 }
 
 //16

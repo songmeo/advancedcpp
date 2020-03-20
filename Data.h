@@ -2,6 +2,7 @@
 #include "Item.h"
 #include <map>
 #include <list>
+using namespace std;
 
 class Data {
 private:

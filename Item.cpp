@@ -1,3 +1,4 @@
+#pragma once
 #include <random>
 #include <iostream>
 #include <fstream>
@@ -24,7 +25,7 @@ Item::Item() {
 		getline(infile, tmp);
 		birds.push_back(tmp);
 	}
-	uniform_int_distribution<int> name(0, birds.size() - 1);
+	uniform_int_distribution<int> name(0, (int)birds.size() - 1);
 	Name = birds[name(generator)];
 	infile.close();
 
@@ -51,4 +52,12 @@ Item::~Item(){
 	delete& Subgroup;
 	delete& Name;
 	delete& timestamp;
+}
+
+char Item::getGroup() {
+	return Group;
+}
+
+int Item::getSubgroup() {
+	return Subgroup;
 }

@@ -1,3 +1,4 @@
+#pragma once
 #include <iostream>
 #include <string>
 #include "Date.h"
@@ -11,7 +12,9 @@ private:
 	Date timestamp;
 public:
 	Item();
-	Item(char, int, string, Date);
-	Item(const Item&);
+	Item(char c, int i, string s, Date d);
+	Item(const Item& itm);
+	char getGroup();
+	int getSubgroup();
 	~Item();
 };
