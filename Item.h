@@ -21,6 +21,9 @@ public:
 	int getSubgroup() {
 		return Subgroup;
 	};
+	string getName() {
+		return Name;
+	};
 	void toStr() {
 		cout << Group << " " << Subgroup << " " << Name << endl;
 	}

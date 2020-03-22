@@ -2,6 +2,7 @@
 #include <algorithm>
 
 //1 map<char, map<int, list<Item*>*>*> DataStructure;
+/*
 Data::Data(int n) {
 	while(n--) {
 		Item* itm = new Item(); //create random item
@@ -23,6 +24,19 @@ Data::Data(int n) {
 		}
 	}
 }
+*/
+
+// map<char, map<int, list<Item*>*>*> DataStructure;
+Data::Data(int n) {
+	while (n--) {
+		Item* itm = new Item();
+		char c = itm->getGroup();
+		int i = itm->getSubgroup();
+		list<Item*> l{ itm };
+		map<int, list<Item*>*> subgrp{ { i, &l }};
+		DataStructure[c] = &subgrp;
+	}
+}
 
 //2
 Data::Data() {}
@@ -42,21 +56,40 @@ Data::~Data() {
 }
 
 //4
+
+/*
 void Data::PrintAll() {
 	for (auto bird : DataStructure)
 		std::cout << bird.first << std::endl;
+}
+*/
+
+void Data::PrintAll() {
+	int items = 0;
+	for (pair<char, map<int, list<Item*>*>*> grp : DataStructure) {
+		for (pair<int, list<Item*>*> subgrp : *(grp.second)) {
+			for (Item* itm : *(subgrp.second)) {
+				cout << itm->getGroup() << " " << itm->getSubgroup() << " " << itm->getName() << endl;
+			}
+		}
+	}
 }
 
 //5 map<char, map<int, list<Item*>*>*> DataStructure;
 int Data::CountItems() {
 	int items = 0;
-	for (auto it1 = DataStructure.begin(); it1 != DataStructure.end(); it1++) {
-		for (auto it2 = (it1->second)->begin(); it2 != (it1->second)->end(); it2++) {
-			items += (it2->second)->size();
+	for (pair<char, map<int, list<Item*>*>*> grp : DataStructure) {
+		for (pair<int, list<Item*>*> subgrp : *(grp.second)) {
+			for (Item* itm : *(subgrp.second)) {
+				items++;
+			}
 		}
 	}
 	return items;
 }
+
+//14
+
 
 /*
 //15
