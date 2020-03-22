@@ -32,9 +32,14 @@ Data::Data(int n) {
 		Item* itm = new Item();
 		char c = itm->getGroup();
 		int i = itm->getSubgroup();
-		list<Item*> l{ itm };
-		map<int, list<Item*>*> subgrp{ { i, &l }};
-		DataStructure[c] = &subgrp;
+		if (DataStructure.find(c) == DataStructure.end()) {
+			list<Item*> l{ itm };
+			map<int, list<Item*>*> subgrp{ { i, &l } };
+			DataStructure[c] = &subgrp;
+		}
+		else {
+			(*(DataStructure[c]))[i]->push_back(itm);
+		}
 	}
 }
 
@@ -55,20 +60,12 @@ Data::~Data() {
 	delete[] &DataStructure;
 }
 
-//4
-
-/*
-void Data::PrintAll() {
-	for (auto bird : DataStructure)
-		std::cout << bird.first << std::endl;
-}
-*/
-
+//4 map<char, map<int, list<Item*>*>*> DataStructure;
 void Data::PrintAll() {
 	int items = 0;
-	for (pair<char, map<int, list<Item*>*>*> grp : DataStructure) {
-		for (pair<int, list<Item*>*> subgrp : *(grp.second)) {
-			for (Item* itm : *(subgrp.second)) {
+	for (auto const &[grp, subgrp_map] : DataStructure) {
+		for(auto const &[subgrp, list] :(*subgrp_map)) {
+			for (Item* itm : *list) {
 				cout << itm->getGroup() << " " << itm->getSubgroup() << " " << itm->getName() << endl;
 			}
 		}

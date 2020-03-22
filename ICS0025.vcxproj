@@ -148,7 +148,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\..\Downloads\ICS0025 Instructors Stuff\Date.cpp" />
-    <ClCompile Include="Data.cpp" />
+    <ClCompile Include="Data.cpp">
+      <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">stdcpp17</LanguageStandard>
+    </ClCompile>
     <ClCompile Include="ICS0025.cpp" />
     <ClCompile Include="Item.cpp" />
   </ItemGroup>

@@ -7,9 +7,9 @@
 using namespace std;
 
 int main() {
-	Data* d = new Data(2);
-	d->PrintAll();
-	//cout << d->CountItems();
+	Data* d = new Data(1);
+	//d->PrintAll();
+	cout << d->CountItems();
 	//Item* it = new Item();
 	//char c = it->getGroup();
 	//int i = it->getSubgroup();
