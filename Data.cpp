@@ -1,32 +1,7 @@
 #include "Data.h"
 #include <algorithm>
 
-//1 map<char, map<int, list<Item*>*>*> DataStructure;
-/*
-Data::Data(int n) {
-	while(n--) {
-		Item* itm = new Item(); //create random item
-		char c = itm->getGroup();
-		int i = itm->getSubgroup();
-		if (DataStructure.find(c) != DataStructure.end()) { //check if itm group exists
-			if ((DataStructure[c]->find(i) != DataStructure[c]->end())) {  //check if itm subgroup exists
-				(*(DataStructure[c]))[i]->push_back(itm); //if yes, add itm to list
-			}
-			else { //if no, create list
-				list<Item*> l = { itm };
-				(*DataStructure[c])[i] = &l;
-			}
-		}
-		else {
-			list<Item*> l = { itm };
-			map<int, list<Item*>*> m{ {i, &l} };
-			DataStructure[c] = &m;
-		}
-	}
-}
-*/
-
-// map<char, map<int, list<Item*>*>*> DataStructure;
+//1
 Data::Data(int n) {
 	while (n--) {
 		Item* itm = new Item();
@@ -63,7 +38,7 @@ Data::~Data() {
 	delete[] &DataStructure;
 }
 
-//4 map<char, map<int, list<Item*>*>*> DataStructure;
+//4
 void Data::PrintAll() {
 	int items = 0;
 	for (auto const &[grp, subgrp_map] : DataStructure) {
@@ -75,7 +50,7 @@ void Data::PrintAll() {
 	}
 }
 
-//5 map<char, map<int, list<Item*>*>*> DataStructure;
+//5 
 int Data::CountItems() {
 	int items = 0;
 	for (pair<char, map<int, list<Item*>*>*> grp : DataStructure) {
@@ -88,6 +63,20 @@ int Data::CountItems() {
 	return items;
 }
 
+//6 
+map<int, list<Item*>*>* Data::GetGroup(char c) {
+	return DataStructure[c];
+}
+
+//7 map<char, map<int, list<Item*>*>*> DataStructure;
+void Data::PrintGroup(char c) {
+	cout << c << ":" << endl;
+	for (auto it1 : *(DataStructure[c])) {
+		for (auto it2 : *(it1.second)) {
+			cout << it2->getSubgroup() << ": " << it2->getName() << " " << it2->getDate() << endl;
+		}
+	}
+}
 //14
 
 

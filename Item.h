@@ -24,7 +24,7 @@ public:
 	string getName() {
 		return Name;
 	};
-	void toStr() {
-		cout << Group << " " << Subgroup << " " << Name << endl;
-	}
+	string getDate() {
+		return timestamp.ToString();
+	};
 };
