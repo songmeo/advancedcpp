@@ -7,7 +7,7 @@
 using namespace std;
 
 int main() {
-	Data* d = new Data(20);
+	Data* d = new Data(200);
 	d->PrintAll();
 	//cout << d->CountItems();
 	//Item* it = new Item();
