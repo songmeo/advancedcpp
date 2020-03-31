@@ -33,12 +33,12 @@ Data::Data(int n) {
 		char c = itm->getGroup();
 		int i = itm->getSubgroup();
 		if (DataStructure.find(c) == DataStructure.end()) {
-			list<Item*> l{ itm };
-			map<int, list<Item*>*> subgrp{ { i, &l } };
-			DataStructure[c] = &subgrp;
+			list<Item*>* l = new list<Item*>{ itm };
+			map<int, list<Item*>*> *subgrp = new map<int, list<Item *>*>{ { i, l } };
+			DataStructure[c] = subgrp;
 		}
 		else {
-			(*(DataStructure[c]))[i]->push_back(itm);
+			(*DataStructure[c])[i]->push_back(itm);
 		}
 	}
 }

@@ -14,7 +14,7 @@ Item::Item() {
 	Subgroup = subgroup(eng);
 
 	//group
-	uniform_int_distribution<int> group(65, 90);
+	uniform_int_distribution<int> group(0x41, 0x5a);
 	Group = static_cast<char>(group(eng));
 
 	//name
