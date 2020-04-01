@@ -8,14 +8,14 @@ using namespace std;
 
 int main() {
 	Data* d = new Data();
-	d->InsertItem('C', 1, "S", *(new Date()));
-	d->InsertItem('C', 1, "D", *(new Date()));
-	d->InsertItem('C', 1, "A", *(new Date()));
+	d->InsertItem('C', 1, "S", *(new Date(1,10,2000)));
+	d->InsertItem('C', 1, "D", *(new Date(2,10,2000)));
+	d->InsertItem('C', 1, "A", *(new Date(4,10,2000)));
 	//d->PrintAll();
 	//cout << d->CountItems();
 	//d->PrintGroup('C');
 	//cout << d->CountGroupItems('C');
 	//d->GetSubGroup('C', '1');
-	d->PrintSubgroupByNames('C', 1);
+	d->PrintSubgroupByDates('C', 1);
 	return 0;
 }
