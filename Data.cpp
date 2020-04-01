@@ -101,7 +101,7 @@ int Data::CountGroupItems(char c) {
 }
 
 
-//9 map<char, map<int, list<Item*>*>*> DataStructure;
+//9 
 list<Item*>* Data::GetSubGroup(char c, int i) {
 	if (DataStructure.count(c) == 0 || (*DataStructure[c]).count(i) == 0) {
 		return nullptr;
@@ -109,35 +109,52 @@ list<Item*>* Data::GetSubGroup(char c, int i) {
 	return (*DataStructure[c])[i];
 }
 
-//10
-void PrintSubgroupByNames(char c, int i) {
+//10 map<char, map<int, list<Item*>*>*> DataStructure;
+void Data::PrintSubgroupByNames(char c, int i) {
+	try {
+		list<Item*>* subgroup = this->GetSubGroup(c, i);
+		if (subgroup == nullptr) {
+			throw invalid_argument("There is no such subgroup");
+		}
+		subgroup->sort([](Item* it1, Item* it2) {
+			return it1->getName()[0] < it2->getName()[0];
+		});
+		cout << c << ":" << endl;
+		for (auto it : *subgroup) {
+			cout << it->getSubgroup() << ": " << it->getName() << " " << it->getDate() << endl;
+		}
+	}
+	catch (const std::invalid_argument& e) {
+		cout << e.what() << endl;
+	}
+}
+
+//11
+void PrintSubgroupByDates(char c, int i) {
 
 }
 
-//14
 
-
-/*
 //15
 Item* Data::InsertItem(char c, int i, string s, Date d) {
 	Item* itm = new Item(c, i, s, d);
-	if (DataStructure.find(c) != DataStructure.end()) { //check if itm group exists
-		if (DataStructure[c]->find(i) != DataStructure[c]->end()) {  //check if itm subgroup exists
-			(*(DataStructure[c]))[i]->push_back(itm); //if yes, add itm to list
+	if (DataStructure.count(c) > 0) { //check if itm group exists
+		if ((*DataStructure[c]).count(i) > 0) {  //check if itm subgroup exists
+			(*DataStructure[c])[i]->push_back(itm); //if yes, add itm to list
 		}
 		else { //if no, create list
-			list<Item*> l = { itm };
-			(*DataStructure[c])[i] = &l;
+			list<Item*>* l = new list<Item*>{ itm };
+			(*DataStructure[c])[i] = l;
 		}
 	}
 	else {
-		list<Item*> l = { itm };
-		map<int, list<Item*>*> m;
-		m[i] = &l;
-		DataStructure[c] = &m;
+		list<Item*>* l = new list<Item*>{ itm };
+		map<int, list<Item*>*>* m = new map<int, list<Item*>*>{ {i,l} };
+		DataStructure[c] = m;
 	}
+	return itm;
 }
-
+/*
 //16
 list<Item*>* Data::InsertSubgroup(char s, int i, initializer_list<Item*> items) {
 
