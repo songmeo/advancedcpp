@@ -15,16 +15,8 @@ public:
 	~Item();
 	Item(char c, int i, string s, Date d);
 	Item(const Item& itm);
-	char getGroup() {
-		return Group;
-	};
-	int getSubgroup() {
-		return Subgroup;
-	};
-	string getName() {
-		return Name;
-	};
-	string getDate() {
-		return timestamp.ToString();
-	};
+	char getGroup();
+	int getSubgroup();
+	string getName();
+	string getDate();
 };

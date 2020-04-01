@@ -16,6 +16,7 @@ int main() {
 	//d->PrintGroup('C');
 	//cout << d->CountGroupItems('C');
 	//d->GetSubGroup('C', '1');
-	d->PrintSubgroupByDates('C', 1);
+	//d->PrintSubgroupByDates('C', 1);
+	cout << d->CountSubgroupItems('C',1);
 	return 0;
 }

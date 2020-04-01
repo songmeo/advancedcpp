@@ -129,7 +129,7 @@ void Data::PrintSubgroupByNames(char c, int i) {
 	}
 }
 
-//11 map<char, map<int, list<Item*>*>*> DataStructure;
+//11
 void Data::PrintSubgroupByDates(char c, int i) {
 	try {
 		list<Item*>* subgroup = this->GetSubGroup(c, i);
@@ -149,6 +149,23 @@ void Data::PrintSubgroupByDates(char c, int i) {
 	}
 }
 
+//12  map<char, map<int, list<Item*>*>*> DataStructure;
+int Data::CountSubgroupItems(char c, int i) {
+	try {
+		int result = 0;
+		list<Item*>* subgroup = this->GetSubGroup(c, i);
+		if (subgroup == nullptr) {
+			throw invalid_argument("There is no such subgroup");
+		}
+		for (auto it : *subgroup) {
+			result++;
+		}
+		return result;
+	}
+	catch (const std::invalid_argument& e) {
+		cout << e.what() << endl;
+	}
+}
 
 //15
 Item* Data::InsertItem(char c, int i, string s, Date d) {

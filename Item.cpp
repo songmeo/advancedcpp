@@ -48,9 +48,26 @@ Item::Item(const Item& itm) {
 	timestamp = itm.timestamp;
 }
 
-Item::~Item(){
-	delete &Group;
+Item::~Item() {
+	delete& Group;
 	delete& Subgroup;
 	delete& Name;
 	delete& timestamp;
 }
+
+char Item::getGroup() {
+	return Group;
+}
+
+int Item::getSubgroup() {
+	return Subgroup;
+}
+
+string Item::getName() {
+	return Name;
+}
+
+string Item::getDate() {
+	return timestamp.ToString();
+}
+
