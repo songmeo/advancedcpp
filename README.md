@@ -27,10 +27,10 @@ Read the  file  into memory, create a vector of strings and use C++ default_rand
 <br>Items from the same group and subgroup must be ordered by their names.
 <br>5.`intCountItems();`
 <br>Returnsthe total number of items in the container.
-<br>6.`map<int, list<Item*> *> *GetGroup(charc);`
+<br>6.`map<int, list<Item*> *> *GetGroup(char c);`
 <br>Returns the pointer to map containing all the items from group c. If the group does not exist, returns nullptr.
-<br>7.`voidPrintGroup(charc);`
-<br>Prints all the items from group cin command prompt window in easily readable format(see Appendix). 
+<br>7.`void PrintGroup(char c);`
+<br>Prints all the items from group c in command prompt window in easily readable format(see Appendix). 
 <br>Items from the same subgroup must be ordered by their names. If the group was not found, throws invalid_argument_exception.
 <br>8.`intCountGroupItems(charc);`
 <br>Returns the current number of items in group c. If the group does not exist, returns 0.
