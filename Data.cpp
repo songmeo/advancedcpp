@@ -68,15 +68,52 @@ map<int, list<Item*>*>* Data::GetGroup(char c) {
 	return DataStructure[c];
 }
 
-//7 map<char, map<int, list<Item*>*>*> DataStructure;
+//7 
 void Data::PrintGroup(char c) {
-	cout << c << ":" << endl;
-	for (auto it1 : *(DataStructure[c])) {
-		for (auto it2 : *(it1.second)) {
-			cout << it2->getSubgroup() << ": " << it2->getName() << " " << it2->getDate() << endl;
+	try {
+		if (DataStructure.find(c) == DataStructure.end()) {
+			throw invalid_argument("There is no such group");
+		}
+		cout << c << ":" << endl;
+		for (auto it1 : *(DataStructure[c])) {
+			for (auto it2 : *(it1.second)) {
+				cout << it2->getSubgroup() << ": " << it2->getName() << " " << it2->getDate() << endl;
+			}
 		}
 	}
+	catch(const std::invalid_argument& e) {
+		cout << e.what() << endl;
+	}
 }
+
+//8
+int Data::CountGroupItems(char c) {
+	int result = 0;
+	if (DataStructure.count(c) == 0) {
+		return 0;
+	}
+	for (auto it1 : *(DataStructure[c])) {
+		for (Item* it2 : *it1.second) {
+			result++;
+		}
+	}
+	return result;
+}
+
+
+//9 map<char, map<int, list<Item*>*>*> DataStructure;
+list<Item*>* Data::GetSubGroup(char c, int i) {
+	if (DataStructure.count(c) == 0 || (*DataStructure[c]).count(i) == 0) {
+		return nullptr;
+	}
+	return (*DataStructure[c])[i];
+}
+
+//10
+void PrintSubgroupByNames(char c, int i) {
+
+}
+
 //14
 
 

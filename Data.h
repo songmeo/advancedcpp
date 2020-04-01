@@ -16,7 +16,7 @@ public:
 	map<int, list<Item*>*>* GetGroup(char c);
 	void PrintGroup(char c);
 	int CountGroupItems(char c);
-	list<Item*>* GetSubGroup(char c, char i);
+	list<Item*>* GetSubGroup(char c, int i);
 	void PrintSubgroupByNames(char c, int i);
 	void PrintSubgroupByDates(char c, int i);
 	int CountSubgroupItems(char c, int i);

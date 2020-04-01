@@ -7,25 +7,11 @@
 using namespace std;
 
 int main() {
-	Data* d = new Data(200);
-	d->PrintAll();
-	cout << d->CountItems();
-	d->PrintGroup('C');
-	//Item* it = new Item();
-	//char c = it->getGroup();
-	//int i = it->getSubgroup();
-	//map<char, map<int, list<Item*>*>*> ds;
-	//list<Item*> l{ it };
-	//map<int, list<Item*>*> m{ {i, &l} };
-	//ds[c] = &m;
-	//int items = 0;
-	//for (auto it1 : ds) {
-	//	for (auto it2 : *it1.second) {
-	//		for (auto it3 : *it2.second) {
-	//			items++;
-	//		}
-	//	}
-	//}
-	//cout << items;
+	Data* d = new Data(2);
+	//d->PrintAll();
+	//cout << d->CountItems();
+	//d->PrintGroup('C');
+	cout << d->CountGroupItems('C');
+	d->GetSubGroup('C', '1');
 	return 0;
 }
