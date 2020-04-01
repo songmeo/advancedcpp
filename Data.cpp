@@ -169,7 +169,7 @@ int Data::CountSubgroupItems(char c, int i) {
 	}
 }
 
-//13 map<char, map<int, list<Item*>*>*> DataStructure;
+//13 
 Item* Data::GetItem(char c, int i, string s) {
 	if (DataStructure.count(c) == 0 || (*DataStructure[c]).count(i) == 0)
 		return nullptr;
@@ -180,7 +180,19 @@ Item* Data::GetItem(char c, int i, string s) {
 	return nullptr;
 }
 
-//14 
+//14 map<char, map<int, list<Item*>*>*> DataStructure;
+void Data::PrintItem(char c, int i, string s) {
+	try {
+		Item* tmp = GetItem(c, i, s);
+		if(tmp == nullptr)
+			throw invalid_argument("There is no such group");
+		cout << tmp->getSubgroup() << ": " << tmp->getName() << " " << tmp->getDate() << endl;
+	}
+	catch (const std::invalid_argument& e) {
+		cout << e.what() << endl;
+	}
+}
+
 //15
 Item* Data::InsertItem(char c, int i, string s, Date d) {
 	Item* itm = new Item(c, i, s, d);
