@@ -213,7 +213,7 @@ Item* Data::InsertItem(char c, int i, string s, Date d) {
 	return itm;
 }
 
-//16 map<char, map<int, list<Item*>*>*> DataStructure;
+//16
 list<Item*>* Data::InsertSubgroup(char c, int i, initializer_list<Item*> items) {
 	if ((*DataStructure[c]).count(i) > 0)
 		return nullptr;
@@ -224,6 +224,19 @@ list<Item*>* Data::InsertSubgroup(char c, int i, initializer_list<Item*> items) 
 	auto lst = new list<Item*>{ items };
 	(*DataStructure[c])[i] = lst;
 	return lst;
+}
+
+//17 map<char, map<int, list<Item*>*>*> DataStructure;
+map<int, list<Item*>*>* Data::InsertGroup(char c, initializer_list<int> subgroups, initializer_list<initializer_list<Item*>> items) {
+	if (DataStructure.count(c) > 0)
+		return nullptr;
+	auto grp = new map<int, list<Item*>*>;
+	DataStructure[c] = grp;
+	for (size_t i = 0; i < subgroups.size(); i++) {
+		auto lst = new list<Item*>{ *(items.begin() + i) };
+		(*grp)[i] = lst;
+	}
+	return grp;
 }
 
 //18
@@ -250,10 +263,3 @@ bool Data::RemoveGroup(char c) {
 	DataStructure.erase(c);
 	return true;
 }
-/*
-
-//17
-map<int, list<Item*>*>* InsertGroup(char c, initializer_list<int> subgroups, initializer_list<initializer_list<Item*>> items) {
-
-}
-*/
