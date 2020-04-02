@@ -26,5 +26,6 @@ public:
 	list<Item*>* InsertSubgroup(char s, int i, initializer_list<Item*> items);
 	map<int, list<Item*>*>* InsertGroup(char c, initializer_list<int> subgroups, initializer_list<initializer_list<Item*>> items);
 	bool RemoveItem(char c, int i, string s);
+	bool RemoveSubgroup(char c, int i);
 	bool RemoveGroup(char c);
 };
