@@ -223,11 +223,18 @@ bool Data::RemoveItem(char c, int i, string s) {
 	return true;
 }
 
-//19 map<char, map<int, list<Item*>*>*> DataStructure;
+//19 
 bool Data::RemoveSubgroup(char c, int i) {
 	list<Item*>* lst = this->GetSubGroup(c, i);
 	if (!lst) return false;
 	this->GetGroup(c)->erase(c);
+	return true;
+}
+
+//20 map<char, map<int, list<Item*>*>*> DataStructure;
+bool Data::RemoveGroup(char c) {
+	if (DataStructure.count(c) == 0) return false;
+	DataStructure.erase(c);
 	return true;
 }
 /*
