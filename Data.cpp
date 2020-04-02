@@ -180,7 +180,7 @@ Item* Data::GetItem(char c, int i, string s) {
 	return nullptr;
 }
 
-//14 map<char, map<int, list<Item*>*>*> DataStructure;
+//14 
 void Data::PrintItem(char c, int i, string s) {
 	try {
 		Item* tmp = GetItem(c, i, s);
@@ -212,12 +212,22 @@ Item* Data::InsertItem(char c, int i, string s, Date d) {
 	}
 	return itm;
 }
+
+//19 map<char, map<int, list<Item*>*>*> DataStructure;
+bool Data::RemoveItem(char c, int i, string s) {
+	Item* itm = this->GetItem(c, i, s);
+	if (!itm) return false;
+	list<Item*>* lst = this->GetSubGroup(c, i);
+	lst->remove(itm);
+	if (lst->empty()) this->GetGroup(c)->erase(c);
+	return true;
+}
+
 /*
 //16
 list<Item*>* Data::InsertSubgroup(char s, int i, initializer_list<Item*> items) {
 
 }
-
 //17
 map<int, list<Item*>*>* InsertGroup(char c, initializer_list<int> subgroups, initializer_list<initializer_list<Item*>> items) {
 
