@@ -19,6 +19,8 @@ int main() {
 	//d->PrintSubgroupByDates('C', 1);
 	//cout << d->CountSubgroupItems('C',1);
 	//d->PrintItem('C', 0, "S");
-	d->RemoveItem('C', 1, "A");
+	//d->RemoveItem('C', 1, "A");
+	Item* itm = new Item('C', 2, "A", *(new Date(1, 10, 2000)));
+	d->InsertSubgroup('C', 2, { itm });
 	return 0;
 }

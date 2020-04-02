@@ -23,7 +23,7 @@ public:
 	Item* GetItem(char c, int i, string s);
 	void PrintItem(char c, int i, string s);
 	Item* InsertItem(char c, int i, string s, Date d);
-	list<Item*>* InsertSubgroup(char s, int i, initializer_list<Item*> items);
+	list<Item*>* InsertSubgroup(char c, int i, initializer_list<Item*> items);
 	map<int, list<Item*>*>* InsertGroup(char c, initializer_list<int> subgroups, initializer_list<initializer_list<Item*>> items);
 	bool RemoveItem(char c, int i, string s);
 	bool RemoveSubgroup(char c, int i);
