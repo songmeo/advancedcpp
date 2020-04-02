@@ -19,7 +19,7 @@ Read the  file  into memory, create a vector of strings and use C++ default_rand
 <br>1.`Data(int n);`
 <br>Constructs the object and fills the container with n random items.
 <br>2.`Data();`
-<br>Constructs the object with empty container
+<br>Constructs the object with empty container.
 <br>3.`~Data();`
 <br>Destructs the object and releases all the memory occupied by the container and the items in it.
 <br>4.`voidPrintAll();`
@@ -28,43 +28,56 @@ Read the  file  into memory, create a vector of strings and use C++ default_rand
 <br>5.`intCountItems();`
 <br>Returnsthe total number of items in the container.
 <br>6.`map<int, list<Item*> *> *GetGroup(char c);`
-<br>Returns the pointer to map containing all the items from group c. If the group does not exist, returns nullptr.
+<br>Returns the pointer to map containing all the items from group c.
 <br>7.`void PrintGroup(char c);`
 <br>Prints all the items from group c in command prompt window in easily readable format(see Appendix). 
-<br>Items from the same subgroup must be ordered by their names. If the group was not found, throws invalid_argument_exception.
+<br>Items from the same subgroup must be ordered by their names.
 <br>8.`intCountGroupItems(charc);`
 <br>Returns the current number of items in group c. If the group does not exist, returns 0.
 <br>9.`list<Item*> *GetSubgroup(charc, int i);`
 <br>Returns the pointer to listcontaining all the items from subgroup i from group c.
-<br>If the subgroup does not exist, returns nullptr.
 <br>10.`voidPrintSubgroupByNames(charc, int i);`
 <br>Prints all the items from subgroup i from group cin command prompt window in easily readable format (see Appendix). 
-<br>Items must be ordered by their names. If the subgroup was not found, throws invalid_argument_exception.
+<br>Items must be ordered by their names.
 <br>11.`voidPrintSubgroupByDates(char c, int i);`
 <br>Prints all the items from subgroup i from group cin command prompt window in easily readable format (see Appendix). 
-<br>Items must be ordered by their timestamps. If the subgroup was not found, throws invalid_argument_exception.
+<br>Items must be ordered by their timestamps.
 <br>12.`intCountSubgroupItems(charc, int i);`
 <br>Returns the current number of items in subgroup i from group c. If the subgroup does not exist, returns 0.
 <br>13.`Item* GetItem(char c, int i, strings);`
-<br>Returns the pointer to the first of items specified by group c, subgroup i and name s. If the item was not found returns nullptr.
+<br>Returns the pointer to the first of items specified by group c, subgroup i and name s.
 <br>14.`voidPrintItem(char c, int i, string s);`
 <br>Prints the first of item specified by group c, subgroup i and name s. If the item was not found throws invalid_argument_exception.
 <br>15.`Item*InsertItem(char c, int i, string s, Date d);`
 <br>Creates and inserts the specified item. Returns the pointer to new item. If the specified item already exists or the input parameters are not correct, returns nullptr.
-<br>If necessary, creates the missing group and subgroup.
 <br>16.`list<Item*> *InsertSubgroup(chars, inti, initializer_list<Item*> items);`
 <br>Creates and inserts the specified subgroup (i.e. list of pointers to  items). The initializer_listcontains pointers to new items. Returns the pointer to new list. 
-<br>If the specified subgroup already exists or the input parameters are not correct, returns nullptr. If necessary, creates the missing group. 
 <br>17.`map<int, list<Item *> *> *InsertGroup(charc, initializer_list<int> subgroups, initializer_list<initializer_list<Item *>> items);`
 <br>Creates and inserts the specified group (i.e. map in which the keys are Item members. 
-<br>Subgroup and values are pointers to lists containing pointers to items). The subgroups initializer_list presents the keys to be included into the new map. 
-<br>The items initializer_list contains initalizer_lists presenting pointers to items to be included. The first initalizer_list from items corresponds to the first integer in subgroups.
-<br>Returns the pointer to new map. If the specified group already exists or the input parameters are not correct, returns nullptr.
+<br>Returns the pointer to new map.
 <br>18.`bool RemoveItem(charc, inti, strings);`
-<br>Removes the specified item. If after removing the subgroup has no members(i.e. its list is empty), remove it too. If after that the group (i.e. map) is empty, remove it also. 
-<br>All the not used memory must be released. Return value: false if the item was not found, otherwise true.
+<br>Removes the specified item.
+<br>All the not used memory must be released.
 <br>19.`boolRemoveSubgroup(char c, int i);`
-<br>Removes the specified subgroup(i.e. list of pointers to items). If after removing the corresponding group (i.e. map) has no members, remove it too. 
-<br>All the not used memory must be released. Return value: false if the subgroup was not found, otherwise true.
+<br>Removes the specified subgroup(i.e. list of pointers to items).
+<br>All the not used memory must be released. 
 <br>20.`boolRemoveGroup(charc);`
-<br>Removes the specified group. All the not used memory must be released. Return value: false if the group was not found, otherwise true.
+<br>Removes the specified group. All the not used memory must be released.
+
+# Coursework 2
+
+## Task
+Update  the  software  implemented  in  Coursework  1  with  the  possibility  to  receive  new  items through a named pipe.
+
+## Application ICS0025PipeServer
+
+## Requirements
+1. The client application is controlled by commands typed by user: 
+<br>a. connect opens the pipe file and sends the first readymessage.
+<br>b. stop sends the stopmessage (see above)and closes the pipe file.After this command the client application must stay active and the user must be able to type command connectonce more.
+<br>c. exit forces the client to print the contents of data structure and exit the application.The client application must obey this command at any moment.
+2. The readymessages except the first onemust besent automatically.
+3. The client’s software must all time be under the user’s control. It means that:
+<br>a. The  keyboard  must  never  be  blocked:  the  user should  beable  to  type  commandsat  any moment.
+Consequently there must at least threethreads: one for listening the keyboard, one for reading data from the server and one for sending messages to the server.Reading from and writing to server must be asynchronous.
+<br>b. If the server exits or closes the connection, the client must inform the user butcontinue to run.
