@@ -162,6 +162,9 @@
   <ItemGroup>
     <Text Include="Birds.txt" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="ICS0025PipeServer.exe" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

@@ -44,4 +44,9 @@
       <Filter>Resource Files</Filter>
     </Text>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="ICS0025PipeServer.exe">
+      <Filter>Resource Files</Filter>
+    </None>
+  </ItemGroup>
 </Project>

@@ -7,12 +7,12 @@ Data::Data(int n) {
 		Item* itm = new Item();
 		char c = itm->getGroup();
 		int i = itm->getSubgroup();
-		if (DataStructure.find(c) == DataStructure.end()) {
-			list<Item*>* l = new list<Item*>{ itm };
-			map<int, list<Item*>*>* subgrp = new map<int, list<Item*>*>{ { i, l } };
+		if (DataStructure.count(c)> 0) {
+			auto l = new list<Item*>{ itm };
+			auto subgrp = new map<int, list<Item*>*>{ { i, l } };
 			DataStructure[c] = subgrp;
 		}
-		else if ((*DataStructure[c]).find(i) == (*DataStructure[c]).end()) {
+		else if ((*DataStructure[c]).count(i) > 0) {
 			list<Item*>* l = new list<Item*>{ itm };
 			(*DataStructure[c])[i] = l;
 		}
@@ -53,8 +53,8 @@ void Data::PrintAll() {
 //5 
 int Data::CountItems() {
 	int items = 0;
-	for (pair<char, map<int, list<Item*>*>*> grp : DataStructure) {
-		for (pair<int, list<Item*>*> subgrp : *(grp.second)) {
+	for (auto grp : DataStructure) {
+		for (auto subgrp : *(grp.second)) {
 			for (Item* itm : *(subgrp.second)) {
 				items++;
 			}
@@ -226,7 +226,7 @@ list<Item*>* Data::InsertSubgroup(char c, int i, initializer_list<Item*> items) 
 	return lst;
 }
 
-//17 map<char, map<int, list<Item*>*>*> DataStructure;
+//17
 map<int, list<Item*>*>* Data::InsertGroup(char c, initializer_list<int> subgroups, initializer_list<initializer_list<Item*>> items) {
 	if (DataStructure.count(c) > 0)
 		return nullptr;
