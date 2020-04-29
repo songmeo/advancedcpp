@@ -34,11 +34,11 @@ void main(int argc, char** argv) {
 int _tmain(int argc, TCHAR * argv[])
 {
     HANDLE hPipe;
-    LPCWSTR lpvMessage = TEXT("Default message from client.");
+    LPCTSTR lpvMessage = TEXT("ready");
     TCHAR  chBuf[BUFSIZE];
     BOOL   fSuccess = FALSE;
     DWORD  cbRead, cbToWrite, cbWritten, dwMode;
-    LPCWSTR lpszPipename = TEXT("\\\\.\\pipe\\ICS0025");
+    LPCTSTR lpszPipename = TEXT("\\\\.\\pipe\\ICS0025");
 
     if (argc > 1)
         lpvMessage = argv[1];
