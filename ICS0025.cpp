@@ -39,10 +39,10 @@ int main()
 	//TCHAR  chBuf[BUFSIZE];
 	//BOOL   fSuccess = FALSE;
 	//DWORD  cbRead, cbToWrite, cbWritten, dwMode;
-	LPCTSTR lpszPipename = TEXT("\\\\.\\pipe\\ICS0025");
+	//LPCTSTR lpszPipename = TEXT("\\\\.\\pipe\\ICS0025");
 
-	hPipe = CreateFile(
-		lpszPipename,   // pipe name 
+	hPipe = CreateFileA(
+		"\\\\.\\pipe\\ICS0025",   // pipe name 
 		GENERIC_READ |  // read and write access 
 		GENERIC_WRITE,
 		0,              // no sharing 
@@ -56,18 +56,22 @@ int main()
 		cout << "Unable to create file, error " << GetLastError() << endl;
 		return 1;
 	}
-	int* pData1 = new int[10], i;
+	//int* pData1 = new int[10], i;
+	const char *pData1 = "ready";
 	unsigned long nWritten;
+	/*
 	for (i = 0; i < 10; i++)
 		*(pData1 + i) = i;
-	if (!WriteFile(hPipe, pData1, 10 * sizeof(int), &nWritten, NULL))
+	*/
+	if (!WriteFile(hPipe, pData1, strlen(pData1) + 1, &nWritten, NULL))
 	{
 		cout << "Unable to write into file, error " << GetLastError() << endl;
 		return 1;
 	}
-	if (nWritten != 10 * sizeof(int))
+	if (nWritten != strlen(pData1) + 1)
 		cout << "Only " << nWritten << " bytes were written" << endl;
-	int* pData2 = new int[10];
+
+	char* pData2 = new char[5];
 	unsigned long nRead;
 	if (SetFilePointer(hPipe, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER)
 	{
@@ -79,9 +83,10 @@ int main()
 		cout << "Unable to read from file, error " << GetLastError() << endl;
 		return 1;
 	}
-	for (i = 0; i < 10; i++)
+	for (int i = 0; i < 5; i++)
 		cout << pData2[i] << ' ';
 	cout << endl;
+
 	CloseHandle(hPipe);
 	return 0;
 }
