@@ -37,11 +37,9 @@ void main(int argc, char** argv) {
 int main()
 {
 	HANDLE hPipe;
-	//LPCTSTR lpvMessage = TEXT("ready");
-	//TCHAR  chBuf[BUFSIZE];
-	//BOOL   fSuccess = FALSE;
-	//DWORD  cbRead, cbToWrite, cbWritten, dwMode;
-	//LPCTSTR lpszPipename = TEXT("\\\\.\\pipe\\ICS0025");
+	const char* ready = "ready";
+	const char* stop = "stop";
+	char* reply = new char[BUFSIZE];
 
 	hPipe = CreateFile(
 		L"\\\\.\\pipe\\ICS0025",   // pipe name 
@@ -58,30 +56,29 @@ int main()
 		cout << "Unable to create file, error " << GetLastError() << endl;
 		return 1;
 	}
-	const char *pData1 = "ready";
+	
 	unsigned long nWritten;
-	if (!WriteFile(hPipe, pData1, strlen(pData1) + 1, &nWritten, NULL))
+	if (!WriteFile(hPipe, ready, strlen(ready) + 1, &nWritten, NULL))
 	{
 		cout << "Unable to write into file, error " << GetLastError() << endl;
 		return 1;
 	}
-	if (nWritten != strlen(pData1) + 1)
+	if (nWritten != strlen(ready) + 1)
 		cout << "Only " << nWritten << " bytes were written" << endl;
 	
-	char* pData2 = new char[BUFSIZE];
 	unsigned long nRead;
 	if (SetFilePointer(hPipe, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER)
 	{
 		cout << "Unable to set the file pointer, error " << GetLastError() << endl;
 		return 1;
 	}
-	if (!ReadFile(hPipe, pData2, BUFSIZE, &nRead, NULL))
+	if (!ReadFile(hPipe, reply, BUFSIZE, &nRead, NULL))
 	{
 		cout << "Unable to read from file, error " << GetLastError() << endl;
 		return 1;
 	}
-	string str = pData2;
-	//cout << str;
+	string str = reply;
+
 	//parse group, subgroup
 	char group = str[0];
 	int subgroup = str[2];
@@ -105,6 +102,24 @@ int main()
 
 	//make new item
 	Item* itm = new Item(group, subgroup, name, *date);
+	
+	//send ready after making new item
+	if (!WriteFile(hPipe, ready, strlen(ready) + 1, &nWritten, NULL))
+	{
+		cout << "Unable to write into file, error " << GetLastError() << endl;
+		return 1;
+	}
+	if (nWritten != strlen(ready) + 1)
+		cout << "Only " << nWritten << " bytes were written" << endl;
+	
+	//send stop
+	if (!WriteFile(hPipe, stop, strlen(stop) + 1, &nWritten, NULL))
+	{
+		cout << "Unable to write into file, error " << GetLastError() << endl;
+		return 1;
+	}
+	if (nWritten != strlen(stop) + 1)
+		cout << "Only " << nWritten << " bytes were written" << endl;
 	
 	CloseHandle(hPipe);
 	return 0;
