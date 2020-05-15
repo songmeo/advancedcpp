@@ -9,6 +9,7 @@
 #include <conio.h>
 #include <tchar.h>
 #include <sstream>
+#include <vector>
 #define BUFSIZE 512
 
 using namespace std;
@@ -80,7 +81,7 @@ int main()
 		return 1;
 	}
 	string str = pData2;
-
+	//cout << str;
 	//parse group, subgroup
 	char group = str[0];
 	int subgroup = str[2];
@@ -95,8 +96,16 @@ int main()
 	int d;
 	string m, y;
 	ss >> d >> m >> y;
+	vector<string> months = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
+	int month = find(months.begin(), months.end(), m) - months.begin() + 1;
+	int year = stoi(y);
 	
+	//make new date
+	Date* date = new Date(d, month, year);
 
+	//make new item
+	Item* itm = new Item(group, subgroup, name, *date);
+	
 	CloseHandle(hPipe);
 	return 0;
 }
