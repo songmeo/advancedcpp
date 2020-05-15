@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <conio.h>
 #include <tchar.h>
+#include <sstream>
 #define BUFSIZE 512
 
 using namespace std;
@@ -41,8 +42,8 @@ int main()
 	//DWORD  cbRead, cbToWrite, cbWritten, dwMode;
 	//LPCTSTR lpszPipename = TEXT("\\\\.\\pipe\\ICS0025");
 
-	hPipe = CreateFileA(
-		"\\\\.\\pipe\\ICS0025",   // pipe name 
+	hPipe = CreateFile(
+		L"\\\\.\\pipe\\ICS0025",   // pipe name 
 		GENERIC_READ |  // read and write access 
 		GENERIC_WRITE,
 		0,              // no sharing 
@@ -56,13 +57,8 @@ int main()
 		cout << "Unable to create file, error " << GetLastError() << endl;
 		return 1;
 	}
-	//int* pData1 = new int[10], i;
 	const char *pData1 = "ready";
 	unsigned long nWritten;
-	/*
-	for (i = 0; i < 10; i++)
-		*(pData1 + i) = i;
-	*/
 	if (!WriteFile(hPipe, pData1, strlen(pData1) + 1, &nWritten, NULL))
 	{
 		cout << "Unable to write into file, error " << GetLastError() << endl;
@@ -70,22 +66,36 @@ int main()
 	}
 	if (nWritten != strlen(pData1) + 1)
 		cout << "Only " << nWritten << " bytes were written" << endl;
-
-	char* pData2 = new char[5];
+	
+	char* pData2 = new char[BUFSIZE];
 	unsigned long nRead;
 	if (SetFilePointer(hPipe, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER)
 	{
 		cout << "Unable to set the file pointer, error " << GetLastError() << endl;
 		return 1;
 	}
-	if (!ReadFile(hPipe, pData2, nWritten, &nRead, NULL))
+	if (!ReadFile(hPipe, pData2, BUFSIZE, &nRead, NULL))
 	{
 		cout << "Unable to read from file, error " << GetLastError() << endl;
 		return 1;
 	}
-	for (int i = 0; i < 5; i++)
-		cout << pData2[i] << ' ';
-	cout << endl;
+	string str = pData2;
+
+	//parse group, subgroup
+	char group = str[0];
+	int subgroup = str[2];
+	
+	//parse name
+	int open = str.find('<');
+	int close = str.find('>');
+	string name = str.substr(open + 1, close - open - 1);
+	
+	//parse date
+	stringstream ss(str.substr(close + 2));
+	int d;
+	string m, y;
+	ss >> d >> m >> y;
+	
 
 	CloseHandle(hPipe);
 	return 0;
