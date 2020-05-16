@@ -10,37 +10,64 @@
 #include <tchar.h>
 #include <sstream>
 #include <vector>
+#include <thread>
+#include <queue>
 #define BUFSIZE 512
 
 using namespace std;
 
-/*
-void main(int argc, char** argv) {
-	/*
-	Data* d = new Data();
-	d->InsertItem('C', 1, "S", *(new Date(1,10,2000)));
-	d->InsertItem('C', 1, "D", *(new Date(2,10,2000)));
-	d->InsertItem('C', 1, "A", *(new Date(4,10,2000)));
-	//d->PrintAll();
-	//cout << d->CountItems();
-	//d->PrintGroup('C');
-	//cout << d->CountGroupItems('C');
-	//d->GetSubGroup('C', '1');
-	//d->PrintSubgroupByDates('C', 1);
-	//cout << d->CountSubgroupItems('C',1);
-	//d->PrintItem('C', 0, "S");
-	//d->RemoveItem('C', 1, "A");
-	Item* itm = new Item('C', 2, "A", *(new Date(1, 10, 2000)));
-	d->InsertSubgroup('C', 2, { itm });
-*/
+enum inputs{ready, connect, stop};
+const char* c = "connect";
+const char* r = "ready";
+const char* s = "stop";
+unsigned long nWritten = 0;
+char* reply = new char[BUFSIZE];
+
+void takeInput(queue<inputs> &q) {
+	string input;
+	while (input != "stop") {
+		cout << "Enter input: ";
+		cin >> input;
+	}
+}
+
+void sendMsg(HANDLE hPipe, queue<inputs>& q) {
+	while (1) {
+		while (q.empty()) {
+			this_thread::sleep_for(chrono::milliseconds(100)); //1/10 second
+		}
+		inputs i = q.front();
+		switch (i) {
+		case connect:
+			if (!WriteFile(hPipe, c, strlen(c) + 1, &nWritten, NULL))
+			{
+				cout << "Unable to write into file, error " << GetLastError() << endl;
+			}
+			if (nWritten != strlen(c) + 1)
+				cout << "Only " << nWritten << " bytes were written" << endl;
+		case ready:
+			if (!WriteFile(hPipe, r, strlen(c) + 1, &nWritten, NULL))
+			{
+				cout << "Unable to write into file, error " << GetLastError() << endl;
+			}
+			if (nWritten != strlen(r) + 1)
+				cout << "Only " << nWritten << " bytes were written" << endl;
+		case stop:
+			if (!WriteFile(hPipe, s, strlen(c) + 1, &nWritten, NULL))
+			{
+				cout << "Unable to write into file, error " << GetLastError() << endl;
+			}
+			if (nWritten != strlen(s) + 1)
+				cout << "Only " << nWritten << " bytes were written" << endl;
+		}
+		q.pop();
+	}
+	
+}
 
 int main()
 {
 	HANDLE hPipe;
-	const char* ready = "ready";
-	const char* stop = "stop";
-	char* reply = new char[BUFSIZE];
-
 	hPipe = CreateFile(
 		L"\\\\.\\pipe\\ICS0025",   // pipe name 
 		GENERIC_READ |  // read and write access 
@@ -57,13 +84,12 @@ int main()
 		return 1;
 	}
 	
-	unsigned long nWritten;
-	if (!WriteFile(hPipe, ready, strlen(ready) + 1, &nWritten, NULL))
+	if (!WriteFile(hPipe, r, strlen(r) + 1, &nWritten, NULL))
 	{
 		cout << "Unable to write into file, error " << GetLastError() << endl;
 		return 1;
 	}
-	if (nWritten != strlen(ready) + 1)
+	if (nWritten != strlen(r) + 1)
 		cout << "Only " << nWritten << " bytes were written" << endl;
 	
 	unsigned long nRead;
@@ -121,6 +147,12 @@ int main()
 	if (nWritten != strlen(stop) + 1)
 		cout << "Only " << nWritten << " bytes were written" << endl;
 	
+	queue<inputs> q;
+	thread listenInput{ takeInput, q };
+	thread sendServer{ sendMsg, q };
+}
+
+	listenInput.join();
 	CloseHandle(hPipe);
 	return 0;
 }
