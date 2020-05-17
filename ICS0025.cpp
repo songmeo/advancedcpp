@@ -16,7 +16,7 @@
 
 using namespace std;
 
-enum inputs{r, c, s};
+enum inputs{c, s};
 const char* con = "connect";
 const char* ready = "ready";
 const char* stop = "stop";
@@ -30,10 +30,7 @@ void takeInput(queue<inputs> &q) {
 	while (i != s) {
 		cout << "Enter input: ";
 		cin >> tmp;
-		if (tmp == "ready") {
-			i = r;
-		}
-		else if (tmp == "connect") {
+		if (tmp == "connect") {
 			i = c;
 		}
 		else if (tmp == "stop") {
@@ -46,20 +43,18 @@ void takeInput(queue<inputs> &q) {
 void sendMsg(HANDLE hPipe, queue<inputs> &q) {
 	const char* input = nullptr;
 	while (1) {
-		while (q.empty()) {
+		if (q.empty()) {
 			this_thread::sleep_for(chrono::milliseconds(100)); //wait for input
+			continue;
 		}
 		inputs i = q.front();
 		switch (i) {
 		case c:
-			input = con;
-			
-			break;
-		case r:
 			input = ready;
 			break;
 		case s:
 			input = stop;
+			break;
 		}
 		if (!WriteFile(hPipe, input, strlen(input) + 1, &nWritten, NULL))
 		{
@@ -138,6 +133,6 @@ int main()
 	sendServer.join();
 	takeOutput.join();
 
-	//CloseHandle(hPipe);
+	CloseHandle(hPipe);
 	return 0;
 }
