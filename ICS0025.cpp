@@ -70,18 +70,22 @@ void sendMsg(HANDLE hPipe, queue<inputs> &q) {
 	}
 }
 
-void takeReply(HANDLE hPipe) {
+void takeReply(HANDLE hPipe, HANDLE hExitEvent) {
+	OVERLAPPED Overlapped;
+	memset(&Overlapped, 0, sizeof Overlapped);
+	Overlapped.hEvent = CreateEventA(NULL, FALSE, FALSE, NULL);
+	HANDLE hEvents[] = { Overlapped.hEvent, hExitEvent };
 	bool NoData = true;
-	if(!ReadFile(hPipe, reply, BUFSIZE, &nRead, NULL))
+	if(!ReadFile(hPipe, reply, BUFSIZE, &nRead, &Overlapped))
 	{
 		int error = GetLastError();
 		switch (error)
 		{
 		case ERROR_IO_PENDING:
-			switch (WaitForMultipleObjects(2, NULL, FALSE, TIMEOUT))
+			switch (WaitForMultipleObjects(2, hEvents, FALSE, TIMEOUT))
 			{ // waiting for response from COM1
 			case WAIT_OBJECT_0:
-				GetOverlappedResult(hPipe, NULL, &nRead, FALSE);
+				GetOverlappedResult(hPipe, &Overlapped, &nRead, FALSE);
 				NoData = false; // Got some data, waiting ended
 				break;
 			case WAIT_OBJECT_0 + 1:
@@ -100,32 +104,38 @@ void takeReply(HANDLE hPipe) {
 			break;
 		}
 	}
-	cout << "Hi";
-	string str = reply;
+	else {
+		NoData = false;
+	}
+	if (!NoData) {
+		string str = reply;
 
-	//parse group, subgroup
-	char group = str[0];
-	int subgroup = str[2];
+		//parse group, subgroup
+		char group = str[0];
+		int subgroup = str[2];
 
-	//parse name
-	int open = str.find('<');
-	int close = str.find('>');
-	string name = str.substr(open + 1, close - open - 1);
+		//parse name
+		int open = str.find('<');
+		int close = str.find('>');
+		string name = str.substr(open + 1, close - open - 1);
 
-	//parse date
-	stringstream ss(str.substr(close + 2));
-	int d;
-	string m, y;
-	ss >> d >> m >> y;
-	vector<string> months = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
-	int month = find(months.begin(), months.end(), m) - months.begin() + 1;
-	int year = stoi(y);
+		//parse date
+		stringstream ss(str.substr(close + 2));
+		int d;
+		string m, y;
+		ss >> d >> m >> y;
+		vector<string> months = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
+		int month = find(months.begin(), months.end(), m) - months.begin() + 1;
+		int year = stoi(y);
 
-	//make new date
-	Date* date = new Date(d, month, year);
+		//make new date
+		Date* date = new Date(d, month, year);
 
-	//make new item
-	Item* itm = new Item(group, subgroup, name, *date);
+		//make new item
+		Item* itm = new Item(group, subgroup, name, *date);
+	}
+	CloseHandle(Overlapped.hEvent); // clean
+	delete reply;
 }
 
 int main()
@@ -152,10 +162,10 @@ int main()
 	//	return 1;
 	//}
 	queue<inputs> q;
-	//HANDLE hExitEvent = CreateEventA(NULL, TRUE, FALSE, NULL);
+	HANDLE hExitEvent = CreateEventA(NULL, TRUE, FALSE, NULL);
 	thread listenInput{ takeInput, ref(q) };
 	thread sendServer{ sendMsg, hPipe, ref(q) };
-	thread takeOutput(takeReply, hPipe);
+	thread takeOutput(takeReply, hPipe, hExitEvent);
 	listenInput.join();
 	sendServer.join();
 	takeOutput.join();
