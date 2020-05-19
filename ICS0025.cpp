@@ -17,31 +17,37 @@
 
 using namespace std;
 
-enum inputs{c, s};
+enum inputs{c, s, e};
 const char* con = "connect";
 const char* ready = "ready";
+const char* ex = "exit";
 const char* stop = "stop";
 unsigned long nWritten = 0;
 unsigned long nRead = 0;
 char* reply = new char[BUFSIZE];
 
-void takeInput(queue<inputs> &q) {
+void takeInput(queue<inputs> &q, HANDLE hExitEvent) {
 	inputs i = c;
-	string tmp;
-	while (i != s) {
+	string tmp = "";
+	while (tmp != ex) {
 		cout << "Enter input: ";
 		cin >> tmp;
-		if (tmp == "connect") {
+		if (tmp == con) {
 			i = c;
 		}
-		else if (tmp == "stop") {
+		else if (tmp == stop) {
 			i = s;
+		}
+		else if (tmp == ex) {
+			i = e;
+			SetEvent(hExitEvent);
+			return;
 		}
 		q.push(i);
 	}
 }
 
-void sendMsg(HANDLE hPipe, queue<inputs> &q) {
+void sendMsg(HANDLE hPipe, queue<inputs> &q, HANDLE hExitEvent) {
 	const char* input = nullptr;
 	while (1) {
 		if (q.empty()) {
@@ -74,65 +80,77 @@ void takeReply(HANDLE hPipe, HANDLE hExitEvent) {
 	OVERLAPPED Overlapped;
 	memset(&Overlapped, 0, sizeof Overlapped);
 	Overlapped.hEvent = CreateEventA(NULL, FALSE, FALSE, NULL);
-	HANDLE hEvents[] = { Overlapped.hEvent, hExitEvent };
+	HANDLE hEvents[] = { Overlapped.hEvent, hExitEvent }; //either it gets data or the user breaks off
 	bool NoData = true;
-	if(!ReadFile(hPipe, reply, BUFSIZE, &nRead, &Overlapped))
-	{
-		int error = GetLastError();
-		switch (error)
+	bool exit = false;
+	while (1) {
+		if (!ReadFile(hPipe, reply, BUFSIZE, &nRead, &Overlapped))
 		{
-		case ERROR_IO_PENDING:
-			switch (WaitForMultipleObjects(2, hEvents, FALSE, TIMEOUT))
-			{ // waiting for response from COM1
-			case WAIT_OBJECT_0:
-				GetOverlappedResult(hPipe, &Overlapped, &nRead, FALSE);
-				NoData = false; // Got some data, waiting ended
+			int error = GetLastError();
+			switch (error)
+			{
+			case ERROR_IO_PENDING:
+				switch (WaitForMultipleObjects(2, hEvents, FALSE, TIMEOUT))
+				{
+				case WAIT_OBJECT_0:
+					GetOverlappedResult(hPipe, &Overlapped, &nRead, FALSE);
+					NoData = false; // Got some data, waiting ended
+					break;
+				case WAIT_OBJECT_0 + 1:
+					cout << "Reading broken off" << endl;
+					exit = true;
+					break; // user has broken the ending off
+				case WAIT_TIMEOUT:
+					cout << "Timeout period " << TIMEOUT << "ms elapsed, nothing was received. Press a key to exit" << endl;
+					exit = true;
+					break; // timeout
+				default:
+					cout << "Reading failed, error " << GetLastError() << ". Press a key to exit" << endl;
+					exit = true;
+					break; // some system errors
+				}
 				break;
-			case WAIT_OBJECT_0 + 1:
-				cout << "Reading broken off" << endl;
-				break; // to user has broken the ending off
-			case WAIT_TIMEOUT:
-				cout << "Timeout period " << TIMEOUT << "ms elapsed, nothing was received. Press a key to exit" << endl;
-				break; // timeout
-			default:
+			default: // some system errors
 				cout << "Reading failed, error " << GetLastError() << ". Press a key to exit" << endl;
-				break; // some system errors
+				exit = true;
+				break;
 			}
-			break;
-		default: // some system errors
-			cout << "Reading failed, error " << GetLastError() << ". Press a key to exit" << endl;
+		}
+		else {
+			NoData = false;
+		}
+		if (exit) {
 			break;
 		}
-	}
-	else {
-		NoData = false;
-	}
-	if (!NoData) {
-		string str = reply;
+		if (!NoData) {
+			string str = reply;
 
-		//parse group, subgroup
-		char group = str[0];
-		int subgroup = str[2];
+			//parse group, subgroup
+			stringstream s(reply);
+			char group;
+			int subgroup;
+			s >> group >> subgroup;
 
-		//parse name
-		int open = str.find('<');
-		int close = str.find('>');
-		string name = str.substr(open + 1, close - open - 1);
+			//parse name
+			int open = str.find('<');
+			int close = str.find('>');
+			string name = str.substr(open + 1, close - open - 1);
 
-		//parse date
-		stringstream ss(str.substr(close + 2));
-		int d;
-		string m, y;
-		ss >> d >> m >> y;
-		vector<string> months = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
-		int month = find(months.begin(), months.end(), m) - months.begin() + 1;
-		int year = stoi(y);
+			//parse date
+			stringstream ss(str.substr(close + 2));
+			int d;
+			string m, y;
+			ss >> d >> m >> y;
+			vector<string> months = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
+			int month = find(months.begin(), months.end(), m) - months.begin() + 1;
+			int year = stoi(y);
 
-		//make new date
-		Date* date = new Date(d, month, year);
+			//make new date
+			Date* date = new Date(d, month, year);
 
-		//make new item
-		Item* itm = new Item(group, subgroup, name, *date);
+			//make new item
+			Item* itm = new Item(group, subgroup, name, *date);
+		}
 	}
 	CloseHandle(Overlapped.hEvent); // clean
 	delete reply;
@@ -156,15 +174,10 @@ int main()
 		cout << "Unable to create file, error " << GetLastError() << endl;
 		return 1;
 	}
-	//if (SetFilePointer(hPipe, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER)
-	//{
-	//	cout << "Unable to set the file pointer, error " << GetLastError() << endl;
-	//	return 1;
-	//}
 	queue<inputs> q;
 	HANDLE hExitEvent = CreateEventA(NULL, TRUE, FALSE, NULL);
-	thread listenInput{ takeInput, ref(q) };
-	thread sendServer{ sendMsg, hPipe, ref(q) };
+	thread listenInput{ takeInput, ref(q), hExitEvent };
+	thread sendServer{ sendMsg, hPipe, ref(q), hExitEvent};
 	thread takeOutput(takeReply, hPipe, hExitEvent);
 	listenInput.join();
 	sendServer.join();
