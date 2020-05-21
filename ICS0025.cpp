@@ -30,8 +30,6 @@ mutex mx;
 condition_variable cv;
 
 void takeInput(queue<inputs> &q, HANDLE hHaveInput, HANDLE hExitEvent) {
-	//unique_lock<mutex> lock(mx);
-	
 	inputs i = c;
 	string tmp = "";
 	while (1) {
@@ -48,19 +46,17 @@ void takeInput(queue<inputs> &q, HANDLE hHaveInput, HANDLE hExitEvent) {
 			SetEvent(hExitEvent);
 			return;
 		}
-		//lock_guard<mutex> lock(mx);
+		unique_lock<mutex> lock(mx);
 		q.push(i);
+		lock.unlock();
+		cv.notify_one();
 		SetEvent(hHaveInput);
-		//cv.notify_all();
 	}
 }
 
 void sendMsg(HANDLE hPipe, queue<inputs>& q, HANDLE hHaveInput, HANDLE hExitEvent) {
-	//unique_lock<mutex> lock(mx);
-	//cv.wait(lock);
 	OVERLAPPED Overlapped;
 	memset(&Overlapped, 0, sizeof Overlapped);
-	//Overlapped.hEvent = CreateEventA(NULL, FALSE, FALSE, NULL);
 	HANDLE hEvents[] = { hHaveInput, hExitEvent }; //either it gets data or timeout
 	bool NoData = true;
 	bool exit = false;
@@ -87,28 +83,27 @@ void sendMsg(HANDLE hPipe, queue<inputs>& q, HANDLE hHaveInput, HANDLE hExitEven
 			break;
 		}
 		if (!NoData) {
-			if (!q.empty()) {
-				inputs i = q.front();
-				switch (i) {
-				case c:
-					input = ready;
-					break;
-				case s:
-					input = stop;
-					break;
-				}
-				if (!WriteFile(hPipe, input, strlen(input) + 1, &nWritten, NULL))
-				{
-					cout << "Unable to write into file, error " << GetLastError() << endl;
-					return;
-				}
-				if (nWritten != strlen(input) + 1) {
-					cout << "Only " << nWritten << " bytes were written" << endl;
-					return;
-				}
-				//lock_guard<mutex> lock(mx);
-				q.pop();
+			unique_lock<mutex> lock(mx);
+			inputs i = q.front();
+			switch (i) {
+			case c:
+				input = ready;
+				break;
+			case s:
+				input = stop;
+				break;
 			}
+			if (!WriteFile(hPipe, input, strlen(input) + 1, &nWritten, NULL))
+			{
+				cout << "Unable to write into file, error " << GetLastError() << endl;
+				return;
+			}
+			if (nWritten != strlen(input) + 1) {
+				cout << "Only " << nWritten << " bytes were written" << endl;
+				return;
+			}
+			q.pop();
+			lock.unlock();
 		}
 	}
 }
