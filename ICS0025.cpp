@@ -26,6 +26,7 @@ const char* stop = "stop";
 unsigned long nWritten = 0;
 unsigned long nRead = 0;
 char* reply = new char[BUFSIZE];
+vector<Item*>* ds = new vector<Item*>();
 mutex mx;
 condition_variable cv;
 
@@ -67,11 +68,11 @@ void sendMsg(HANDLE hPipe, queue<inputs>& q, HANDLE hHaveInput, HANDLE hExitEven
 				NoData = false; // Got some data, waiting ended
 				break;
 			case WAIT_OBJECT_0 + 1:
-				cout << "Writing broken off" << endl;
+				//cout << endl << "Writing broken off" << endl;
 				exit = true;
 				break; // user has broken the ending off
 			case WAIT_TIMEOUT:
-				cout << "Timeout period " << TIMEOUT << "ms elapsed, nothing was received. Press a key to exit" << endl;
+				//cout << "Timeout period " << TIMEOUT << "ms elapsed, nothing was received. Press a key to exit" << endl;
 				exit = true;
 				break; // timeout
 			default:
@@ -108,7 +109,7 @@ void sendMsg(HANDLE hPipe, queue<inputs>& q, HANDLE hHaveInput, HANDLE hExitEven
 	}
 }
 
-void takeReply(HANDLE hPipe, HANDLE hExitEvent) {
+void takeReply(queue<inputs>& q, HANDLE hPipe, HANDLE hExitEvent, HANDLE hHaveInput) {
 	OVERLAPPED Overlapped;
 	memset(&Overlapped, 0, sizeof Overlapped);
 	Overlapped.hEvent = CreateEventA(NULL, FALSE, FALSE, NULL);
@@ -129,21 +130,21 @@ void takeReply(HANDLE hPipe, HANDLE hExitEvent) {
 					NoData = false; // Got some data, waiting ended
 					break;
 				case WAIT_OBJECT_0 + 1:
-					cout << "Reading broken off" << endl;
+					//cout << "Reading broken off" << endl;
 					exit = true;
 					break; // user has broken the ending off
 				case WAIT_TIMEOUT:
-					cout << "Timeout period " << TIMEOUT << "ms elapsed, nothing was received. Press a key to exit" << endl;
+					//cout << "Timeout period " << TIMEOUT << "ms elapsed, nothing was received. Press a key to exit" << endl;
 					exit = true;
 					break; // timeout
 				default:
-					cout << "Reading failed, error " << GetLastError() << ". Press a key to exit" << endl;
+					//cout << "Reading failed, error " << GetLastError() << ". Press a key to exit" << endl;
 					exit = true;
 					break; // some system errors
 				}
 				break;
 			default: // some system errors
-				cout << "Reading failed, error " << GetLastError() << ". Press a key to exit" << endl;
+				//cout << "Reading failed, error " << GetLastError() << ". Press a key to exit" << endl;
 				exit = true;
 				break;
 			}
@@ -182,7 +183,12 @@ void takeReply(HANDLE hPipe, HANDLE hExitEvent) {
 
 			//make new item
 			Item* itm = new Item(group, subgroup, name, *date);
-
+			ds->push_back(itm);
+			unique_lock<mutex> lock(mx);
+			q.push(c);
+			lock.unlock();
+			cv.notify_one();
+			SetEvent(hHaveInput);
 		}
 	}
 	CloseHandle(Overlapped.hEvent); // clean
@@ -212,11 +218,13 @@ int main()
 	HANDLE hHaveInput = CreateEventA(NULL, FALSE, FALSE, NULL);
 	thread listenInput{ takeInput, ref(q), hHaveInput, hExitEvent };
 	thread sendServer{ sendMsg, hPipe, ref(q), hHaveInput, hExitEvent};
-	thread takeOutput(takeReply, hPipe, hExitEvent);
+	thread takeOutput(takeReply, ref(q), hPipe, hExitEvent, hHaveInput);
 	listenInput.join();
 	sendServer.join();
 	takeOutput.join();
-
 	CloseHandle(hPipe);
+	for (Item* itm : *ds) {
+		cout << itm->getGroup() << " " << itm->getSubgroup() << " " << itm->getName() << " " << itm->getDate() << endl;
+	}
 	return 0;
 }
