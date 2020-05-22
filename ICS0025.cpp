@@ -12,6 +12,7 @@
 #include <vector>
 #include <thread>
 #include <queue>
+#include <atomic>
 #include <condition_variable>
 #define BUFSIZE 512
 #define TIMEOUT 60*1000
@@ -22,19 +23,20 @@ const char* con = "connect";
 const char* ready = "ready";
 const char* ex = "exit";
 const char* stop = "stop";
-unsigned long nWritten = 0;
-unsigned long nRead = 0;
-char* reply = new char[BUFSIZE];
+
 vector<Item*>* ds = new vector<Item*>();
 mutex mx;
+bool closed = true;
 condition_variable cv;
 
 class Reader { //read from server
 private:
 	queue<inputs>& q;
 	HANDLE hPipe;
-	HANDLE hExitEvent; 
+	HANDLE hExitEvent;
 	HANDLE hHaveInput;
+	unsigned long nRead = 0;
+	char* reply = new char[BUFSIZE];
 public:
 	Reader(queue<inputs>& q, HANDLE& h1, HANDLE& h2, HANDLE& h3) : q(q), hPipe(h1), hHaveInput(h2), hExitEvent(h3) { }
 	void operator() () {
@@ -163,6 +165,7 @@ private:
 	HANDLE hPipe;
 	HANDLE hHaveInput;
 	HANDLE hExitEvent;
+	unsigned long nWritten = 0;
 public:
 	Sender(queue<inputs>& q, HANDLE& h1, HANDLE& h2, HANDLE& h3) : q(q), hPipe(h1), hHaveInput(h2), hExitEvent(h3) { };
 	void operator() () {
@@ -201,23 +204,53 @@ public:
 					input = ready;
 					break;
 				case c:
+					if (closed) {
+						hPipe = CreateFileA(
+							"\\\\.\\pipe\\ICS0025",   // pipe name 
+							GENERIC_READ |  // read and write access 
+							GENERIC_WRITE,
+							0,              // no sharing 
+							NULL,           // default security attributes
+							CREATE_ALWAYS,  // opens existing pipe 
+							FILE_FLAG_OVERLAPPED, // for asynchronous writing and reading 
+							NULL);          // no template file
+						if (hPipe == INVALID_HANDLE_VALUE) {
+							cout << "Unable to create file, error " << GetLastError() << endl;
+							return;
+						}
+						closed = false;
+					}
 					input = ready;
 					break;
 				case s:
 					input = stop;
+					closed = true;
+					if (!WriteFile(hPipe, input, strlen(input) + 1, &nWritten, NULL))
+					{
+						cout << "Unable to write into file, error " << GetLastError() << endl;
+						return;
+					}
+					if (nWritten != strlen(input) + 1) {
+						cout << "Only " << nWritten << " bytes were written" << endl;
+						return;
+					}
+					q.pop();
+					lock.unlock();
 					break;
 				}
-				if (!WriteFile(hPipe, input, strlen(input) + 1, &nWritten, NULL))
-				{
-					cout << "Unable to write into file, error " << GetLastError() << endl;
-					return;
+				if (!closed) {
+					if (!WriteFile(hPipe, input, strlen(input) + 1, &nWritten, NULL))
+					{
+						cout << "Unable to write into file, error " << GetLastError() << endl;
+						return;
+					}
+					if (nWritten != strlen(input) + 1) {
+						cout << "Only " << nWritten << " bytes were written" << endl;
+						return;
+					}
+					q.pop();
+					lock.unlock();
 				}
-				if (nWritten != strlen(input) + 1) {
-					cout << "Only " << nWritten << " bytes were written" << endl;
-					return;
-				}
-				q.pop();
-				lock.unlock();
 			}
 		}
 	}
@@ -225,25 +258,12 @@ public:
 };
 
 int main() {
-	HANDLE hPipe = CreateFileA(
-		"\\\\.\\pipe\\ICS0025",   // pipe name 
-		GENERIC_READ |  // read and write access 
-		GENERIC_WRITE,
-		0,              // no sharing 
-		NULL,           // default security attributes
-		OPEN_EXISTING,  // opens existing pipe 
-		FILE_FLAG_OVERLAPPED, // for asynchronous writing and reading 
-		NULL);          // no template file 
-
-	if (hPipe == INVALID_HANDLE_VALUE) {
-		cout << "Unable to create file, error " << GetLastError() << endl;
-		return 1;
-	}
+	HANDLE hPipe;
 	queue<inputs> q;
 	HANDLE hExitEvent = CreateEventA(NULL, TRUE, FALSE, NULL);
 	HANDLE hHaveInput = CreateEventA(NULL, FALSE, FALSE, NULL);
 	thread listenerThread{ Listener(ref(q), hHaveInput, hExitEvent) };
-	thread senderThread{ Sender(ref(q),hPipe, hHaveInput, hExitEvent) };
+	thread senderThread{ Sender(ref(q), hPipe, hHaveInput, hExitEvent) };
 	thread readerThread{ Reader(ref(q), hPipe, hHaveInput, hExitEvent) };
 	listenerThread.join();
 	senderThread.join();
