@@ -32,7 +32,7 @@ condition_variable cv;
 class Reader { //read from server
 private:
 	queue<inputs>& q;
-	HANDLE hPipe;
+	HANDLE& hPipe;
 	HANDLE hExitEvent;
 	HANDLE hHaveInput;
 	unsigned long nRead = 0;
@@ -47,6 +47,9 @@ public:
 		bool NoData = true;
 		bool exit = false;
 		while (1) {
+			if (closed) {
+				continue;
+			}
 			if (!ReadFile(hPipe, reply, BUFSIZE, &nRead, &Overlapped))
 			{
 				int error = GetLastError();
@@ -60,7 +63,7 @@ public:
 						NoData = false; // Got some data, waiting ended
 						break;
 					case WAIT_OBJECT_0 + 1:
-						//cout << "Reading broken off" << endl;
+						// << "Reading broken off" << endl;
 						exit = true;
 						break; // user has broken the ending off
 					case WAIT_TIMEOUT:
@@ -162,7 +165,7 @@ public:
 class Sender { //send to server
 private:
 	queue<inputs>& q;
-	HANDLE hPipe;
+	HANDLE& hPipe;
 	HANDLE hHaveInput;
 	HANDLE hExitEvent;
 	unsigned long nWritten = 0;
@@ -225,20 +228,9 @@ public:
 				case s:
 					input = stop;
 					closed = true;
-					if (!WriteFile(hPipe, input, strlen(input) + 1, &nWritten, NULL))
-					{
-						cout << "Unable to write into file, error " << GetLastError() << endl;
-						return;
-					}
-					if (nWritten != strlen(input) + 1) {
-						cout << "Only " << nWritten << " bytes were written" << endl;
-						return;
-					}
-					q.pop();
-					lock.unlock();
 					break;
 				}
-				if (!closed) {
+				if (!closed || input == stop) {
 					if (!WriteFile(hPipe, input, strlen(input) + 1, &nWritten, NULL))
 					{
 						cout << "Unable to write into file, error " << GetLastError() << endl;
@@ -263,8 +255,8 @@ int main() {
 	HANDLE hExitEvent = CreateEventA(NULL, TRUE, FALSE, NULL);
 	HANDLE hHaveInput = CreateEventA(NULL, FALSE, FALSE, NULL);
 	thread listenerThread{ Listener(ref(q), hHaveInput, hExitEvent) };
-	thread senderThread{ Sender(ref(q), hPipe, hHaveInput, hExitEvent) };
-	thread readerThread{ Reader(ref(q), hPipe, hHaveInput, hExitEvent) };
+	thread senderThread{ Sender(ref(q), ref(hPipe), hHaveInput, hExitEvent) };
+	thread readerThread{ Reader(ref(q), ref(hPipe), hHaveInput, hExitEvent) };
 	listenerThread.join();
 	senderThread.join();
 	readerThread.join();
