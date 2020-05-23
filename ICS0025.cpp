@@ -181,14 +181,15 @@ public:
 		while (1) {
 			switch (WaitForMultipleObjects(2, hEvents, FALSE, TIMEOUT)) {
 			case WAIT_OBJECT_0:
+				cout << "got data";
 				NoData = false; // Got some data, waiting ended
 				break;
 			case WAIT_OBJECT_0 + 1:
-				//cout << endl << "Writing broken off" << endl;
+				cout << endl << "Writing broken off" << endl;
 				exit = true;
 				break; // user has broken the ending off
 			case WAIT_TIMEOUT:
-				//cout << "Timeout period " << TIMEOUT << "ms elapsed, nothing was received. Press a key to exit" << endl;
+				cout << "Timeout period " << TIMEOUT << "ms elapsed, nothing was received. Press a key to exit" << endl;
 				exit = true;
 				break; // timeout
 			default:
@@ -223,6 +224,7 @@ public:
 						}
 						closed = false;
 					}
+					cout << "created";
 					input = ready;
 					break;
 				case s:
@@ -240,9 +242,9 @@ public:
 						cout << "Only " << nWritten << " bytes were written" << endl;
 						return;
 					}
-					q.pop();
-					lock.unlock();
 				}
+				q.pop();
+				lock.unlock();
 			}
 		}
 	}
