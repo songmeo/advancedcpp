@@ -48,6 +48,12 @@ public:
 		bool exit = false;
 		while (1) {
 			if (closed) {
+				switch (WaitForSingleObject(hExitEvent, 1000)) {
+				case WAIT_OBJECT_0:
+					return;
+				case WAIT_TIMEOUT:
+					break;
+				}
 				continue;
 			}
 			if (!ReadFile(hPipe, reply, BUFSIZE, &nRead, &Overlapped))
@@ -172,8 +178,6 @@ private:
 public:
 	Sender(queue<inputs>& q, HANDLE& h1, HANDLE& h2, HANDLE& h3) : q(q), hPipe(h1), hHaveInput(h2), hExitEvent(h3) { };
 	void operator() () {
-		OVERLAPPED Overlapped;
-		memset(&Overlapped, 0, sizeof Overlapped);
 		HANDLE hEvents[] = { hHaveInput, hExitEvent }; //either it gets data or timeout
 		bool NoData = true;
 		bool exit = false;
@@ -181,7 +185,6 @@ public:
 		while (1) {
 			switch (WaitForMultipleObjects(2, hEvents, FALSE, TIMEOUT)) {
 			case WAIT_OBJECT_0:
-				cout << "got data";
 				NoData = false; // Got some data, waiting ended
 				break;
 			case WAIT_OBJECT_0 + 1:
@@ -198,6 +201,9 @@ public:
 				break; // some system errors
 			}
 			if (exit) {
+				if (!closed) {
+					CloseHandle(hPipe);
+				}
 				break;
 			}
 			if (!NoData) {
@@ -224,7 +230,6 @@ public:
 						}
 						closed = false;
 					}
-					cout << "created";
 					input = ready;
 					break;
 				case s:
@@ -262,8 +267,10 @@ int main() {
 	listenerThread.join();
 	senderThread.join();
 	readerThread.join();
-	CloseHandle(hPipe);
+	CloseHandle(hExitEvent);
+	CloseHandle(hHaveInput);
 	for (Item* itm : *ds)
 		cout << itm->getGroup() << " " << itm->getSubgroup() << " " << itm->getName() << " " << itm->getDate() << endl;
 	return 0;
+	
 }
