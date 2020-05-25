@@ -25,9 +25,7 @@ const char* ex = "exit";
 const char* stop = "stop";
 
 vector<Item*>* ds = new vector<Item*>();
-mutex mx;
 bool closed = true;
-condition_variable cv;
 
 class Reader { //read from server
 private:
@@ -35,10 +33,12 @@ private:
 	HANDLE& hPipe;
 	HANDLE hExitEvent;
 	HANDLE hHaveInput;
+	mutex& mx;
+	condition_variable& cv;
 	unsigned long nRead = 0;
 	char* reply = new char[BUFSIZE];
 public:
-	Reader(queue<inputs>& q, HANDLE& h1, HANDLE& h2, HANDLE& h3) : q(q), hPipe(h1), hHaveInput(h2), hExitEvent(h3) { }
+	Reader(queue<inputs>& q, HANDLE& h1, mutex& mx, condition_variable& cv, HANDLE& h2, HANDLE& h3) : q(q), hPipe(h1), mx(mx), cv(cv), hHaveInput(h2), hExitEvent(h3) { }
 	void operator() () {
 		OVERLAPPED Overlapped;
 		memset(&Overlapped, 0, sizeof Overlapped);
@@ -140,8 +140,10 @@ private:
 	queue<inputs>& q;
 	HANDLE hHaveInput;
 	HANDLE hExitEvent;
+	mutex& mx;
+	condition_variable& cv;
 public:
-	Listener(queue<inputs>& q, HANDLE h1, HANDLE h2) : q(q), hHaveInput(h1), hExitEvent(h2) {};
+	Listener(queue<inputs>& q, mutex& m, condition_variable& c, HANDLE h1, HANDLE h2) : q(q), mx(m), cv(c), hHaveInput(h1), hExitEvent(h2) {};
 	void operator() () {
 		inputs i = c;
 		string tmp = "";
@@ -174,9 +176,11 @@ private:
 	HANDLE& hPipe;
 	HANDLE hHaveInput;
 	HANDLE hExitEvent;
+	mutex& mx;
+	condition_variable& cv;
 	unsigned long nWritten = 0;
 public:
-	Sender(queue<inputs>& q, HANDLE& h1, HANDLE& h2, HANDLE& h3) : q(q), hPipe(h1), hHaveInput(h2), hExitEvent(h3) { };
+	Sender(queue<inputs>& q, HANDLE& h1, mutex& m, condition_variable& c, HANDLE& h2, HANDLE& h3) : q(q), hPipe(h1), mx(m), cv(c), hHaveInput(h2), hExitEvent(h3) { };
 	void operator() () {
 		HANDLE hEvents[] = { hHaveInput, hExitEvent }; //either it gets data or timeout
 		bool NoData = true;
@@ -259,11 +263,13 @@ public:
 int main() {
 	HANDLE hPipe;
 	queue<inputs> q;
+	mutex mx;
+	condition_variable cv;
 	HANDLE hExitEvent = CreateEventA(NULL, TRUE, FALSE, NULL);
 	HANDLE hHaveInput = CreateEventA(NULL, FALSE, FALSE, NULL);
-	thread listenerThread{ Listener(ref(q), hHaveInput, hExitEvent) };
-	thread senderThread{ Sender(ref(q), ref(hPipe), hHaveInput, hExitEvent) };
-	thread readerThread{ Reader(ref(q), ref(hPipe), hHaveInput, hExitEvent) };
+	thread listenerThread{ Listener(ref(q), mx, cv, hHaveInput, hExitEvent) };
+	thread senderThread{ Sender(ref(q), ref(hPipe), mx, cv, hHaveInput, hExitEvent) };
+	thread readerThread{ Reader(ref(q), ref(hPipe),  mx, cv, hHaveInput, hExitEvent) };
 	listenerThread.join();
 	senderThread.join();
 	readerThread.join();

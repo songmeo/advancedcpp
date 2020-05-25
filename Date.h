@@ -17,7 +17,7 @@ public:
 	virtual ~Date();
 	char *ToString() const;
 	void SetYear(int y);
-	int GetYear() const { return Year; };
+	int GetYear() const { return Year; }
 	void SetMonth(int);
 	int GetMonth(char * = nullptr, int = 0) const;
 	void SetDay(int);
