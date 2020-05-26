@@ -23,9 +23,9 @@ const char* con = "connect";
 const char* ready = "ready";
 const char* ex = "exit";
 const char* stop = "stop";
-
-vector<Item*>* ds = new vector<Item*>();
+Data* ds = new Data();
 bool closed = true;
+bool server_error = false;
 
 class Reader { //read from server
 private:
@@ -66,25 +66,27 @@ public:
 					{
 					case WAIT_OBJECT_0:
 						GetOverlappedResult(hPipe, &Overlapped, &nRead, FALSE);
-						NoData = false; // Got some data, waiting ended
+						NoData = false;
 						break;
 					case WAIT_OBJECT_0 + 1:
-						// << "Reading broken off" << endl;
+						cout << "Reading broken off" << endl;
 						exit = true;
-						break; // user has broken the ending off
+						break;
 					case WAIT_TIMEOUT:
-						//cout << "Timeout period " << TIMEOUT << "ms elapsed, nothing was received. Press a key to exit" << endl;
+						cout << "Timeout period " << TIMEOUT << "ms elapsed, nothing was received." << endl;
 						exit = true;
-						break; // timeout
+						break; 
 					default:
-						//cout << "Reading failed, error " << GetLastError() << ". Press a key to exit" << endl;
+						cout << "Reading failed, error " << GetLastError() << endl;
 						exit = true;
-						break; // some system errors
+						server_error = true;
+						break; 
 					}
 					break;
-				default: // some system errors
-					//cout << "Reading failed, error " << GetLastError() << ". Press a key to exit" << endl;
+				default: 
+					cout << "Reading failed, error " << GetLastError() << endl;
 					exit = true;
+					server_error = true;
 					break;
 				}
 			}
@@ -121,8 +123,10 @@ public:
 				Date* date = new Date(d, month, year);
 
 				//make new item
-				Item* itm = new Item(group, subgroup, name, *date);
-				ds->push_back(itm);
+				ds->InsertItem(group, subgroup, name, *date);
+
+				
+
 				unique_lock<mutex> lock(mx);
 				q.push(r);
 				lock.unlock();
@@ -138,16 +142,20 @@ public:
 class Listener { //listen to user input
 private:
 	queue<inputs>& q;
-	HANDLE hHaveInput;
-	HANDLE hExitEvent;
+	HANDLE& hPipe;
+	HANDLE& hHaveInput;
+	HANDLE& hExitEvent;
 	mutex& mx;
 	condition_variable& cv;
 public:
-	Listener(queue<inputs>& q, mutex& m, condition_variable& c, HANDLE h1, HANDLE h2) : q(q), mx(m), cv(c), hHaveInput(h1), hExitEvent(h2) {};
+	Listener(queue<inputs>& q, HANDLE& h1, mutex& m, condition_variable& c, HANDLE& h2, HANDLE& h3) : q(q), mx(m), cv(c), hPipe(h1), hHaveInput(h2), hExitEvent(h3) {};
 	void operator() () {
 		inputs i = c;
 		string tmp = "";
 		while (1) {
+			if (server_error) {
+				cout << "server error. Enter exit to exit" << endl;
+			}
 			cout << "Enter input: ";
 			cin >> tmp;
 			if (tmp == con) {
@@ -160,6 +168,10 @@ public:
 				i = e;
 				SetEvent(hExitEvent);
 				return;
+			}
+			else {
+				cout << "try again" << endl;
+				continue;
 			}
 			unique_lock<mutex> lock(mx);
 			q.push(i);
@@ -174,8 +186,8 @@ class Sender { //send to server
 private:
 	queue<inputs>& q;
 	HANDLE& hPipe;
-	HANDLE hHaveInput;
-	HANDLE hExitEvent;
+	HANDLE& hHaveInput;
+	HANDLE& hExitEvent;
 	mutex& mx;
 	condition_variable& cv;
 	unsigned long nWritten = 0;
@@ -189,20 +201,21 @@ public:
 		while (1) {
 			switch (WaitForMultipleObjects(2, hEvents, FALSE, TIMEOUT)) {
 			case WAIT_OBJECT_0:
-				NoData = false; // Got some data, waiting ended
+				NoData = false; 
 				break;
 			case WAIT_OBJECT_0 + 1:
 				cout << endl << "Writing broken off" << endl;
 				exit = true;
-				break; // user has broken the ending off
+				break; 
 			case WAIT_TIMEOUT:
-				cout << "Timeout period " << TIMEOUT << "ms elapsed, nothing was received. Press a key to exit" << endl;
+				cout << "Timeout period " << TIMEOUT << "ms elapsed, nothing was received." << endl;
 				exit = true;
-				break; // timeout
+				break; 
 			default:
-				cout << "Writing failed, error " << GetLastError() << ". Press a key to exit" << endl;
+				cout << "Writing failed, error " << GetLastError() << endl;
+				server_error = true;
 				exit = true;
-				break; // some system errors
+				break;
 			}
 			if (exit) {
 				if (!closed) {
@@ -225,7 +238,7 @@ public:
 							GENERIC_WRITE,
 							0,              // no sharing 
 							NULL,           // default security attributes
-							CREATE_ALWAYS,  // opens existing pipe 
+							CREATE_ALWAYS,  // always open new pipe 
 							FILE_FLAG_OVERLAPPED, // for asynchronous writing and reading 
 							NULL);          // no template file
 						if (hPipe == INVALID_HANDLE_VALUE) {
@@ -245,6 +258,7 @@ public:
 					if (!WriteFile(hPipe, input, strlen(input) + 1, &nWritten, NULL))
 					{
 						cout << "Unable to write into file, error " << GetLastError() << endl;
+						server_error = true;
 						return;
 					}
 					if (nWritten != strlen(input) + 1) {
@@ -267,7 +281,7 @@ int main() {
 	condition_variable cv;
 	HANDLE hExitEvent = CreateEventA(NULL, TRUE, FALSE, NULL);
 	HANDLE hHaveInput = CreateEventA(NULL, FALSE, FALSE, NULL);
-	thread listenerThread{ Listener(ref(q), mx, cv, hHaveInput, hExitEvent) };
+	thread listenerThread{ Listener(ref(q), ref(hPipe), mx, cv, hHaveInput, hExitEvent) };
 	thread senderThread{ Sender(ref(q), ref(hPipe), mx, cv, hHaveInput, hExitEvent) };
 	thread readerThread{ Reader(ref(q), ref(hPipe),  mx, cv, hHaveInput, hExitEvent) };
 	listenerThread.join();
@@ -275,8 +289,7 @@ int main() {
 	readerThread.join();
 	CloseHandle(hExitEvent);
 	CloseHandle(hHaveInput);
-	for (Item* itm : *ds)
-		cout << itm->getGroup() << " " << itm->getSubgroup() << " " << itm->getName() << " " << itm->getDate() << endl;
+	ds->PrintAll();
 	return 0;
 	
 }
