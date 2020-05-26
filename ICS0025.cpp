@@ -159,9 +159,15 @@ public:
 			cout << "Enter input: ";
 			cin >> tmp;
 			if (tmp == con) {
+				if (!closed) {
+					cout << "server has already opened" << endl;
+				}
 				i = c;
 			}
 			else if (tmp == stop) {
+				if (closed) {
+					cout << "server has already stopped" << endl;
+				}
 				i = s;
 			}
 			else if (tmp == ex) {
